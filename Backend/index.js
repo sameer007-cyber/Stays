@@ -10,35 +10,29 @@ import likeRoutes from "./routes/likeRoutes.js";
 
 const app = express();
 
-/* -------------------- MIDDLEWARE -------------------- */
-
 app.use(express.json());
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://stays-911.vercel.app",
+  "https://stays-oavv.vercel.app",
+  "https://stays-nu.vercel.app",
+];
 
 app.use(
   cors({
-    origin: true, // ✅ allow ALL origins (safe for APIs)
+    origin: allowedOrigins,
     credentials: true,
   })
 );
 
-// Clerk AFTER CORS
 app.use(clerkMiddleware());
-
-/* -------------------- ROUTES -------------------- */
 
 app.use("/api/users", userRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/likes", likeRoutes);
 
-/* -------------------- HEALTH CHECK -------------------- */
-app.get("/", (req, res) => {
-  res.json({ status: "Backend is running 🚀" });
-});
-
-/* -------------------- SERVER -------------------- */
-
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(8080, () => {
+  console.log("Backend running on port 8080");
 });
