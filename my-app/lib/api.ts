@@ -1,5 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL!
 
+/* ---------------- LISTINGS ---------------- */
+
 export async function getListings(filters?: {
   location?: string | null
   minPrice?: string | null
@@ -11,47 +13,38 @@ export async function getListings(filters?: {
   if (filters?.minPrice) params.append("minPrice", filters.minPrice)
   if (filters?.maxPrice) params.append("maxPrice", filters.maxPrice)
 
-  const res = await fetch(`${API_URL}/listings?${params.toString()}`)
+  const res = await fetch(`${API_URL}/listings?${params.toString()}`, {
+    credentials: "include",
+  })
 
   if (!res.ok) throw new Error("Fetch failed")
   return res.json()
 }
 
-
 /**
  * GET single listing
- * Token is OPTIONAL and passed from client
+ * Cookie auth is automatic
  */
-export async function getListingById(
-  id: string,
-  token?: string
-) {
+export async function getListingById(id: string) {
   const res = await fetch(`${API_URL}/listings/${id}`, {
-    headers: token
-      ? {
-          Authorization: `Bearer ${token}`,
-        }
-      : {},
+    credentials: "include",
   })
 
   if (!res.ok) return null
   return res.json()
 }
 
-/**
- * GET reviews for a listing (public)
- */
+/* ---------------- REVIEWS ---------------- */
+
 export async function getReviewsByListingId(id: string) {
-  const res = await fetch(
-    `${API_URL}/reviews/listing/${id}`
-  )
+  const res = await fetch(`${API_URL}/reviews/listing/${id}`, {
+    credentials: "include",
+  })
+
   if (!res.ok) throw new Error("Reviews failed")
   return res.json()
 }
 
-/**
- * CREATE review (auth required)
- */
 export async function createReview(data: {
   rating: number
   comment?: string
@@ -62,7 +55,7 @@ export async function createReview(data: {
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // Clerk session
+    credentials: "include",
     body: JSON.stringify(data),
   })
 
@@ -75,27 +68,23 @@ export async function createReview(data: {
   return res.json()
 }
 
+/* ---------------- LIKES ---------------- */
 
-export async function toggleLike(listingId: string, token: string) {
+export async function toggleLike(listingId: string) {
   const res = await fetch(`${API_URL}/likes/${listingId}`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: "include",
   })
 
   if (!res.ok) throw new Error("Like failed")
   return res.json()
 }
 
-export async function getMyLikes(token: string) {
+export async function getMyLikes() {
   const res = await fetch(`${API_URL}/likes`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: "include",
   })
 
   if (!res.ok) throw new Error("Likes fetch failed")
   return res.json()
 }
-
