@@ -12,12 +12,30 @@ const app = express()
 
 app.use(express.json())
 
+import cors from "cors"
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://stays-mcug.vercel.app",
+  "https://stays-mcug-git-main-sameer-dharmadhikaris-projects.vercel.app",
+]
+
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: function (origin, callback) {
+      // allow requests with no origin (Postman, server-to-server)
+      if (!origin) return callback(null, true)
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      } else {
+        return callback(new Error("Not allowed by CORS"))
+      }
+    },
     credentials: true,
   })
 )
+
 
 app.use(clerkMiddleware())
 
