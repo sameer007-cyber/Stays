@@ -10,39 +10,40 @@ import likeRoutes from "./routes/likeRoutes.js";
 
 const app = express();
 
-app.use(express.json());
+/* -------------------- MIDDLEWARE -------------------- */
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://stays-mcug.vercel.app",
-  "https://stays-mcug-git-main-sameer-dharmadhikaris-projects.vercel.app",
-];
+app.use(express.json());
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // Postman / server-to-server
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Not allowed by CORS"));
-    },
+    origin: [
+      "http://localhost:3000",
+      "https://stays-mcug.vercel.app",
+      "https://stays-mcug-git-main-sameer-dharmadhikaris-projects.vercel.app",
+      "https://stays-nu.vercel.app"
+    ],
     credentials: true,
   })
 );
 
-// ❌ REMOVE app.options("*", cors());
-
+// Clerk AFTER CORS
 app.use(clerkMiddleware());
+
+/* -------------------- ROUTES -------------------- */
 
 app.use("/api/users", userRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/likes", likeRoutes);
 
-const PORT = 8080;
+/* -------------------- HEALTH CHECK -------------------- */
+app.get("/", (req, res) => {
+  res.json({ status: "Backend is running 🚀" });
+});
+
+/* -------------------- SERVER -------------------- */
+
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
