@@ -1,12 +1,12 @@
-import * as Listing from "../models/listingModel.js"
-import prisma from "../config/prisma.js"
+import prisma from "../config/prisma.js";
+import { geocodeLocation } from "../utils/geocode.js";
 
 /**
  * GET /api/listings?location=&minPrice=&maxPrice=
  */
 export const getListings = async (req, res) => {
   try {
-    const { location, minPrice, maxPrice } = req.query
+    const { location, minPrice, maxPrice } = req.query;
 
     const listings = await prisma.listing.findMany({
       where: {
@@ -14,107 +14,184 @@ export const getListings = async (req, res) => {
           ? { contains: location, mode: "insensitive" }
           : undefined,
 
-        price: {
-          gte: minPrice ? Number(minPrice) : undefined,
-          lte: maxPrice ? Number(maxPrice) : undefined,
-        },
+        price:
+          minPrice || maxPrice
+            ? {
+                gte: minPrice ? Number(minPrice) : undefined,
+                lte: maxPrice ? Number(maxPrice) : undefined,
+              }
+            : undefined,
       },
       include: {
         reviews: true,
-        owner: { select: { id: true, name: true } },
+        owner: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
-    })
+    });
 
-    res.json(listings)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: "Failed to fetch listings" })
+    res.json(listings);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch listings" });
   }
-}
+};
 
+/**
+ * GET /api/listings/:id
+ */
 export const getListingById = async (req, res) => {
-  const { id } = req.params
+  try {
+    const { id } = req.params;
 
-  const listing = await prisma.listing.findUnique({
-    where: { id },
-    include: {
-      owner: {
-        select: {
-          id: true,
-          name: true,
+    const listing = await prisma.listing.findUnique({
+      where: { id },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        reviews: {
+          include: {
+            user: { select: { name: true } },
+          },
         },
       },
-      reviews: {
-        include: {
-          user: { select: { name: true } },
-        },
-      },
-    },
-  })
+    });
 
-  if (!listing) {
-    return res.status(404).json({ message: "Listing not found" })
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    const isOwner =
+      req.auth?.userId && listing.ownerId === req.auth.userId;
+
+    res.json({
+      ...listing,
+      isOwner,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch listing" });
   }
+};
 
-  const isOwner = req.user
-    ? listing.ownerId === req.user.id
-    : false
-
-  res.json({
-    ...listing,
-    isOwner,
-  })
-}
-
-
-
- 
+/**
+ * POST /api/listings
+ */
 export const createListing = async (req, res) => {
   try {
-    const listing = await Listing.createListing({
-      ...req.body,
-      ownerId: req.user.id,
-    })
+    const {
+      title,
+      description,
+      price,
+      location,
+      country,
+      imageUrl,
+    } = req.body;
 
-    res.status(201).json(listing)
-  } catch (err) {
-    res.status(400).json({ error: err.message })
+    if (!req.auth?.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // 🌍 Geocode address → latitude & longitude
+    const { latitude, longitude } = await geocodeLocation(
+      location,
+      country
+    );
+
+    const listing = await prisma.listing.create({
+      data: {
+        title,
+        description,
+        price,
+        location,
+        country,
+        imageUrl,
+        latitude,
+        longitude,
+        ownerId: req.auth.userId,
+      },
+    });
+
+    res.status(201).json(listing);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to create listing" });
   }
-}
+};
 
 /**
  * PUT /api/listings/:id
  */
 export const updateListing = async (req, res) => {
-  const listing = await Listing.getListingById(req.params.id)
+  try {
+    const { id } = req.params;
 
-  if (!listing) {
-    return res.status(404).json({ message: "Listing not found" })
+    if (!req.auth?.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const listing = await prisma.listing.findUnique({
+      where: { id },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    if (listing.ownerId !== req.auth.userId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const updatedListing = await prisma.listing.update({
+      where: { id },
+      data: req.body,
+    });
+
+    res.json(updatedListing);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update listing" });
   }
-
-  if (listing.ownerId !== req.user.id) {
-    return res.status(403).json({ message: "Forbidden" })
-  }
-
-  const updated = await Listing.updateListing(req.params.id, req.body)
-  res.json(updated)
-}
+};
 
 /**
  * DELETE /api/listings/:id
  */
 export const deleteListing = async (req, res) => {
-  const listing = await Listing.getListingById(req.params.id)
+  try {
+    const { id } = req.params;
 
-  if (!listing) {
-    return res.status(404).json({ message: "Listing not found" })
+    if (!req.auth?.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const listing = await prisma.listing.findUnique({
+      where: { id },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    if (listing.ownerId !== req.auth.userId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    await prisma.listing.delete({
+      where: { id },
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete listing" });
   }
-
-  if (listing.ownerId !== req.user.id) {
-    return res.status(403).json({ message: "Forbidden" })
-  }
-
-  await Listing.deleteListing(req.params.id)
-  res.json({ success: true })
-}
+};
