@@ -16,12 +16,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "https://stays-mcug.vercel.app",
-      "https://stays-mcug-git-main-sameer-dharmadhikaris-projects.vercel.app",
-      "https://stays-nu.vercel.app"
-    ],
+    origin: true, // ✅ allow ALL origins (safe for APIs)
     credentials: true,
   })
 );
