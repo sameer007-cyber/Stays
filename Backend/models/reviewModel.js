@@ -7,11 +7,21 @@ export const createReview = async (data) => {
 export const getReviewsByListingId = async (listingId) => {
   return prisma.review.findMany({
     where: { listingId },
-    include: { user: { select: { name: true } } },
-    orderBy: { createdAt: "desc" },
+    include: {
+      user: { select: { name: true } }
+    },
+    orderBy: { createdAt: "desc" }
+  })
+}
+
+export const getReviewById = async (id) => {
+  return prisma.review.findUnique({
+    where: { id }
   })
 }
 
 export const deleteReview = async (id) => {
-  await prisma.review.delete({ where: { id } })
+  return prisma.review.delete({
+    where: { id }
+  })
 }

@@ -4,8 +4,7 @@ export const syncUser = async (req, res, next) => {
   const clerkId = req.auth?.userId
 
   if (!clerkId) {
-    console.error("❌ NO CLERK USER IN REQUEST")
-    return res.status(401).json({ error: "Unauthorized" })
+    return next()
   }
 
   const email =
@@ -21,7 +20,7 @@ export const syncUser = async (req, res, next) => {
   const user = await findOrCreateUser({
     clerkId,
     email,
-    name,
+    name
   })
 
   req.user = user

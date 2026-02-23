@@ -1,11 +1,8 @@
 import * as Review from "../models/reviewModel.js"
 
-/**
- * POST /api/reviews
- */
 export const createReview = async (req, res) => {
   try {
-    if (!req.user) {
+    if (!req.user?.id) {
       return res.status(401).json({ error: "Unauthorized" })
     }
 
@@ -19,7 +16,7 @@ export const createReview = async (req, res) => {
       rating,
       comment,
       listingId,
-      userId: req.user.id, // 🔥 from auth
+      userId: req.user.id
     })
 
     res.status(201).json(review)
@@ -28,9 +25,6 @@ export const createReview = async (req, res) => {
   }
 }
 
-/**
- * GET /api/reviews/listing/:listingId
- */
 export const getReviewsByListingId = async (req, res) => {
   try {
     const reviews = await Review.getReviewsByListingId(req.params.listingId)
@@ -42,7 +36,7 @@ export const getReviewsByListingId = async (req, res) => {
 
 export const deleteReview = async (req, res) => {
   try {
-    if (!req.user) {
+    if (!req.user?.id) {
       return res.status(401).json({ error: "Unauthorized" })
     }
 
@@ -52,14 +46,15 @@ export const deleteReview = async (req, res) => {
       return res.status(404).json({ error: "Review not found" })
     }
 
-    // 🔒 OWNER CHECK
     if (review.userId !== req.user.id) {
       return res.status(403).json({ error: "Forbidden" })
     }
 
     await Review.deleteReview(req.params.id)
+
     res.status(200).json({ message: "Review deleted" })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
 }
+
