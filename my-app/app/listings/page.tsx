@@ -16,7 +16,7 @@ export default function ListingsPage() {
         </p>
       </div>
 
-      {/* ✅ REQUIRED for useSearchParams */}
+      {/* for useSearchParams */}
       <Suspense
         fallback={
           <div className="px-4 py-12 text-muted-foreground">

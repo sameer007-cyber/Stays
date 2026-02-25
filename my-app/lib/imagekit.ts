@@ -1,7 +1,7 @@
 import ImageKit from "imagekit-javascript"
 
 /**
- * ✅ IMPORTANT
+ *  IMPORTANT
  * - Do NOT use `authenticationEndpoint` here
  * - ImageKit JS typings do NOT support it
  * - Auth is handled manually during upload

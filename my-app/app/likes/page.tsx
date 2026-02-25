@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import ListingCard from "@/components/listing-card"
-import { useUser } from "@clerk/nextjs"
+import { useUser, useAuth } from "@clerk/nextjs"
+import { getMyLikes } from "@/lib/api"
 
 interface Listing {
   id: string
@@ -15,17 +16,19 @@ interface Listing {
 
 export default function LikesPage() {
   const { user, isLoaded } = useUser()
+  const { getToken } = useAuth()
   const [listings, setListings] = useState<Listing[]>([])
 
   useEffect(() => {
     if (!user) return
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/likes`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then(setListings)
-      .catch(console.error)
+    async function load() {
+      const token = await getToken()
+      const data = await getMyLikes(token!)
+      setListings(data)
+    }
+
+    load()
   }, [user])
 
   if (!isLoaded) return null

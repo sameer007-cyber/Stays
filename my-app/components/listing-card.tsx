@@ -33,23 +33,23 @@ export default function ListingCard({
   const [liked, setLiked] = useState(initiallyLiked)
   const [loading, setLoading] = useState(false)
 
-  async function handleLike(e: React.MouseEvent) {
-    e.preventDefault()
-    e.stopPropagation()
-    if (!user || loading) return
+async function handleLike(e: React.MouseEvent) {
+  e.preventDefault()
+  e.stopPropagation()
+  if (!user || loading) return
 
-    setLiked(!liked)
-    setLoading(true)
+  setLiked(!liked)
+  setLoading(true)
 
-    try {
-      const token = await getToken()
-      await toggleLike(id, token!)
-    } catch {
-      setLiked((v) => !v)
-    } finally {
-      setLoading(false)
-    }
+  try {
+    const token = await getToken()
+    await toggleLike(id, token!)
+  } catch {
+    setLiked((v) => !v)
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <Link href={`/listings/${id}`} className="group">

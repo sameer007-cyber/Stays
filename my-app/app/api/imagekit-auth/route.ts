@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
 
-export const runtime = "nodejs" // REQUIRED
+export const runtime = "nodejs" 
 
 export async function GET() {
-  // ⛔ DO NOT create ImageKit outside the handler
   const ImageKit = (await import("imagekit")).default
 
   const privateKey = process.env.IMAGEKIT_PRIVATE_KEY

@@ -1,6 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL!
 
-/* ---------------- LISTINGS ---------------- */
 
 export async function getListings(filters?: {
   location?: string | null
@@ -13,76 +12,81 @@ export async function getListings(filters?: {
   if (filters?.minPrice) params.append("minPrice", filters.minPrice)
   if (filters?.maxPrice) params.append("maxPrice", filters.maxPrice)
 
-  const res = await fetch(`${API_URL}/listings?${params.toString()}`, {
-    credentials: "include",
-  })
+  const res = await fetch(`${API_URL}/listings?${params.toString()}`)
 
   if (!res.ok) throw new Error("Fetch failed")
   return res.json()
 }
 
-/**
- * GET single listing
- * Cookie auth is automatic
- */
-export async function getListingById(id: string) {
+export async function getListingById(id: string, token?: string) {
   const res = await fetch(`${API_URL}/listings/${id}`, {
-    credentials: "include",
+    headers: token
+      ? { Authorization: `Bearer ${token}` }
+      : undefined,
   })
 
   if (!res.ok) return null
   return res.json()
 }
 
-/* ---------------- REVIEWS ---------------- */
 
 export async function getReviewsByListingId(id: string) {
-  const res = await fetch(`${API_URL}/reviews/listing/${id}`, {
-    credentials: "include",
-  })
+  const res = await fetch(`${API_URL}/reviews/listing/${id}`)
 
   if (!res.ok) throw new Error("Reviews failed")
   return res.json()
 }
 
-export async function createReview(data: {
-  rating: number
-  comment?: string
-  listingId: string
-}) {
+export async function createReview(
+  data: {
+    rating: number
+    comment?: string
+    listingId: string
+  },
+  token: string
+) {
   const res = await fetch(`${API_URL}/reviews`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
-    credentials: "include",
     body: JSON.stringify(data),
   })
 
-  if (!res.ok) {
-    const text = await res.text()
-    console.error("Review failed:", text)
-    throw new Error("Review failed")
-  }
-
+  if (!res.ok) throw new Error("Review failed")
   return res.json()
 }
 
-/* ---------------- LIKES ---------------- */
+export async function deleteReview(id: string, token: string) {
+  const res = await fetch(`${API_URL}/reviews/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
 
-export async function toggleLike(listingId: string) {
+  if (!res.ok) throw new Error("Delete failed")
+}
+
+
+export async function toggleLike(listingId: string, token: string) {
   const res = await fetch(`${API_URL}/likes/${listingId}`, {
     method: "POST",
-    credentials: "include",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   })
 
   if (!res.ok) throw new Error("Like failed")
   return res.json()
 }
 
-export async function getMyLikes() {
+export async function getMyLikes(token: string) {
   const res = await fetch(`${API_URL}/likes`, {
-    credentials: "include",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   })
 
   if (!res.ok) throw new Error("Likes fetch failed")

@@ -69,7 +69,7 @@ export default function ListingsGrid() {
         />
       )}
 
-      {/* 🏠 GRID */}
+      {/*  GRID */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {listings.map((l) => {
           const count = l.reviews.length

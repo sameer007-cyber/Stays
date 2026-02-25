@@ -3,7 +3,8 @@
 import { Star, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
-import { useUser } from "@clerk/nextjs"
+import { useUser, useAuth } from "@clerk/nextjs"
+import { deleteReview } from "@/lib/api"
 
 interface Review {
   id: string
@@ -15,6 +16,8 @@ interface Review {
 
 export function ReviewsList({ reviews }: { reviews: Review[] }) {
   const { user } = useUser()
+  const { getToken } = useAuth()
+
   const [items, setItems] = useState(reviews)
 
   const handleDelete = async (id: string) => {
@@ -22,15 +25,8 @@ export function ReviewsList({ reviews }: { reviews: Review[] }) {
     setItems((r) => r.filter((x) => x.id !== id))
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/reviews/${id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      )
-
-      if (!res.ok) throw new Error()
+      const token = await getToken()
+      await deleteReview(id, token!)
     } catch {
       setItems(prev)
       alert("Failed to delete review")

@@ -53,7 +53,6 @@ export default function CreateListingPage() {
       setLoading(true)
       toast.loading("Creating listing...")
 
-      // image → base64
       const base64 = await new Promise<string>((res, rej) => {
         const r = new FileReader()
         r.onload = () => res(r.result as string)
