@@ -1,28 +1,27 @@
 import { findOrCreateUser } from "../models/userModel.js"
-
 export const syncUser = async (req, res, next) => {
-  const clerkId = req.auth?.userId
+  const auth = req.auth();  
 
-  if (!clerkId) {
-    return next()
-  }
+  const clerkId = auth?.userId;
+
+  if (!clerkId) return next();
 
   const email =
-    req.auth.sessionClaims?.email ||
-    req.auth.sessionClaims?.email_address ||
-    null
+    auth.sessionClaims?.email ||
+    auth.sessionClaims?.email_address ||
+    null;
 
   const name =
-    req.auth.sessionClaims?.name ||
-    req.auth.sessionClaims?.username ||
-    "User"
+    auth.sessionClaims?.name ||
+    auth.sessionClaims?.username ||
+    "User";
 
   const user = await findOrCreateUser({
     clerkId,
     email,
-    name
-  })
+    name,
+  });
 
-  req.user = user
-  next()
-}
+  req.user = user;
+  next();
+};

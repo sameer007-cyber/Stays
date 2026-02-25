@@ -111,17 +111,33 @@ export const updateListing = async (req, res) => {
       return res.status(403).json({ message: "Forbidden" })
     }
 
+    const {
+      title,
+      description,
+      price,
+      location,
+      country,
+      imageUrl
+    } = req.body
+
     const updated = await prisma.listing.update({
       where: { id },
-      data: req.body
+      data: {
+        title,
+        description,
+        price: Number(price),
+        location,
+        country,
+        imageUrl
+      }
     })
 
     res.json(updated)
-  } catch {
+  } catch (error) {
+    console.error(error)   // 👈 important for debugging
     res.status(500).json({ error: "Failed to update listing" })
   }
 }
-
 export const deleteListing = async (req, res) => {
   try {
     if (!req.user?.id) {
